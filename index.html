@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>הדשבורדים שלי</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap">
+<style>
+  /* Layout: single column index, two groups (live sites, Claude pages), card grid per group */
+  :root {
+    --bg: #0f1512;
+    --surface: #18211d;
+    --fg: #e8eeea;
+    --muted: #9aa9a1;
+    --line: #2a3631;
+    --accent: #4fc29b;
+    --accent-soft: #1d3a2f;
+    --font-body: "Heebo", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    color-scheme: dark;
+  }
+  :root[data-theme="light"] {
+    --bg: #f5f6f4; --surface: #ffffff; --fg: #17201c; --muted: #5d6b64;
+    --line: #dfe4e0; --accent: #0f6b4f; --accent-soft: #e3f1ec; color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--fg); font-family: var(--font-body);
+    font-size: 16px; line-height: 1.55; direction: rtl;
+    padding-block: 40px 56px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  main { max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+  header { display: flex; flex-direction: column; gap: 6px; }
+  h1 { font-size: clamp(1.9rem, 5vw, 2.6rem); font-weight: 800; line-height: 1.15; margin: 0; text-wrap: balance; }
+  .sub { color: var(--muted); margin: 0; }
+  .tools { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
+  input[type="search"] {
+    font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--line);
+    border-radius: 8px; padding: 10px 14px; min-width: 0; flex: 1 1 220px; max-width: 360px;
+  }
+  input[type="search"]:focus-visible, a.card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .count { color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+  section { display: flex; flex-direction: column; gap: 14px; }
+  h2 { font-size: 1.15rem; font-weight: 700; margin: 0; }
+  .note { color: var(--muted); font-size: 0.9rem; margin: 0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  a.card {
+    display: flex; flex-direction: column; gap: 10px; min-width: 0;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    padding: 18px; color: inherit; text-decoration: none;
+    transition: border-color .15s, transform .15s;
+  }
+  a.card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .name { font-weight: 700; font-size: 1.1rem; overflow-wrap: anywhere; }
+  .meta { color: var(--muted); font-size: 0.85rem; overflow-wrap: anywhere; }
+  .host { direction: ltr; text-align: right; unicode-bidi: plaintext; }
+  .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: auto; }
+  .pill { background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 2px 10px; font-size: 0.78rem; font-weight: 500; }
+  .open { color: var(--accent); font-weight: 500; font-size: 0.9rem; }
+  .empty { color: var(--muted); }
+  @media (max-width: 600px) {
+    body { padding-block: 24px 40px; }
+    main { gap: 28px; }
+    .grid { grid-template-columns: 1fr; gap: 10px; }
+    a.card { padding: 16px; min-height: 48px; }
+    input[type="search"] { flex-basis: 100%; max-width: none; font-size: 16px; }
+    .row { padding-top: 4px; }
+  }
+  @media (prefers-reduced-motion: reduce) { a.card { transition: none; } a.card:hover { transform: none; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>הדשבורדים שלי</h1>
+    <p class="sub">כל הדשבורדים שנבנו, במקום אחד.</p>
+    <div class="tools">
+      <input id="q" type="search" placeholder="חיפוש דשבורד" aria-label="חיפוש דשבורד">
+      <span class="count" id="count"></span>
+    </div>
+  </header>
+
+  <section>
+    <h2>אתרים באינטרנט</h2>
+    <p class="note">הדשבורדים שפורסמו ב-Vercel. הכניסה בהתחברות עם Google.</p>
+    <div class="grid" id="sites"></div>
+  </section>
+
+  <section>
+    <h2>דפים ב-Claude</h2>
+    <p class="note">דפים שנבנו בשיחות. ממוינים לפי עדכון אחרון.</p>
+    <div class="grid" id="pages"></div>
+  </section>
+  <p class="empty" id="none" hidden>לא נמצא דשבורד שמתאים לחיפוש.</p>
+</main>
+
+<script>
+  var sites = [
+    { name: "עליות שבת", host: "aliyot-dashboard.vercel.app", hint: "פירוט חיובי עליות לפי שבת ומתפלל" },
+    { name: "soul-dashboard", host: "soul-dashboard-ten.vercel.app", hint: "" },
+    { name: "cells-dashboard", host: "cells-dashboard.vercel.app", hint: "" },
+    { name: "shabat-dashboard", host: "shabat-dashboard.vercel.app", hint: "" },
+    { name: "donors-dinner-dashboard", host: "donors-dinner-dashboard.vercel.app", hint: "" }
+  ];
+  var pages = [
+    { name: "תרומות אחרי הקמפיין", url: "https://claude.ai/code/artifact/9b859a3f-3178-47c8-8ce8-ca8f9363d49a", date: "22.11.2026" },
+    { name: "לוח יורצייט וימי הולדת", url: "https://claude.ai/code/artifact/49dd6736-2c0c-417c-8c18-7a56b505bf0d", date: "18.11.2026" },
+    { name: "soul", url: "https://claude.ai/code/artifact/9a26e32b-c46f-4006-b9c9-92ed46d48ab8", date: "15.11.2026" },
+    { name: "שכירות תאים", url: "https://claude.ai/code/artifact/de07d7a1-d45f-4df6-9ac9-a6f770ade284", date: "02.11.2026" },
+    { name: "חובות עליות שבת", url: "https://claude.ai/code/artifact/fc8e2401-70e3-4945-a281-03cebf7f00ba", date: "01.11.2026" }
+  ];
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  function card(href, name, line, tag) {
+    return '<a class="card" href="' + esc(href) + '" target="_blank" rel="noopener">' +
+      '<span class="name">' + esc(name) + '</span>' + line +
+      '<span class="row"><span class="pill">' + esc(tag) + '</span><span class="open">פתיחה ←</span></span></a>';
+  }
+
+  function render() {
+    var q = document.getElementById("q").value.trim().toLowerCase();
+    var s = sites.filter(function (x) { return (x.name + " " + x.host + " " + x.hint).toLowerCase().indexOf(q) > -1; });
+    var p = pages.filter(function (x) { return x.name.toLowerCase().indexOf(q) > -1; });
+    document.getElementById("sites").innerHTML = s.map(function (x) {
+      var line = (x.hint ? '<span class="meta">' + esc(x.hint) + '</span>' : '') + '<span class="meta host">' + esc(x.host) + '</span>';
+      return card("https://" + x.host, x.name, line, "Vercel");
+    }).join("");
+    document.getElementById("pages").innerHTML = p.map(function (x) {
+      return card(x.url, x.name, '<span class="meta">עודכן ב-' + esc(x.date) + '</span>', "Claude");
+    }).join("");
+    document.getElementById("count").textContent = (s.length + p.length) + " דשבורדים";
+    document.getElementById("none").hidden = (s.length + p.length) > 0;
+  }
+  document.getElementById("q").addEventListener("input", render);
+  render();
+</script>
+
+</body>
+</html>
